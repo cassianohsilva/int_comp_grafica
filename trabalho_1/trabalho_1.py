@@ -5,7 +5,6 @@ class Node(object):
 	"""
 		parametric list containing 2 elements with 2 coordinates (origin, vector)
 	"""
-	# def __init__(self, parametric, vertices, color):
 	def __init__(self, vertices, color):
 		# super(Tree, self).__init__()
 
@@ -13,112 +12,8 @@ class Node(object):
 		self.__vertices = vertices
 		self.__equation = None
 
-		# if parametric == None or len(parametric) == 0:
 		self.__left = None
 		self.__right = None
-
-		# elif len(parametric) == 2:
-		# 	self.__origin, self.__vector = parametric
-
-		# 	bLeft, bRight = self.__calcBounds()
-
-		# 	self.__left = Node(None, bLeft, self.__color)
-		# 	self.__right = Node(None, bRight, randColor())
-
-		# else:
-		# 	print("Parametric require 0 or 2 coordinates")
-
-	# def __calcBounds(self):
-
-	# 	vertices1 = [ self.__vertices[0] ]
-	# 	vertices2 = []
-
-	# 	intersections = []
-
-	# 	for i in range(len(self.__vertices)):
-
-	# 		if len(intersections) >= 2:
-	# 			break
-
-	# 		else:
-
-	# 			p0 = self.__vertices[i]
-	# 			p1 = self.__vertices[(i + 1) % len(self.__vertices)]
-
-	# 			pq = PVector(self.__origin[0] - p0[0], self.__origin[1] - p0[1])
-
-	# 			r = PVector(p1[0] - p0[0], p1[1] - p0[1])
-	# 			s = PVector(self.__vector[0], self.__vector[1])
-				
-	# 			numerator1 = pq.x * s.y - pq.y * s.x
-	# 			numerator2 = pq.x * r.y - pq.y * r.x
-
-	# 			denominator = r.x * s.y - r.y * s.x
-
-	# 			if numerator1 != 0:
-
-	# 				t = numerator1 / denominator
-	# 				u = numerator2 / denominator
-
-	# 				# if (t >= 0) and (t <= 1) and (u >= 0) and (u <= 1):
-					
-	# 				# If intersect the bound line
-	# 				if (t >= 0) and (t <= 1):
-
-	# 					intersectionPoint = (t*r.x + p0[0], t*r.y + p0[1])
-
-	# 					# alreadyAdded = False
-
-	# 					# for point in intersections:
-
-	# 					# 	if isClose(point, intersectionPoint):
-	# 					# 		alreadyAdded = True
-	# 					# 		break
-
-	# 					# 	pass
-
-	# 					# if !alreadyAdded:
-	# 					# 	intersections.append(intersectionPoint)
-
-	# 					if len(intersections) == 1:
-
-	# 						# vertices1.append(p0)
-	# 						# if !isclose(t, 0):
-	# 						vertices1.append(intersectionPoint)
-
-	# 						# if !isclose(t, 1):
-	# 						vertices2.append(intersectionPoint)
-
-	# 						vertices2.append(p1)
-
-	# 					elif len(intersections) == 2:
-
-	# 						vertices1.append(intersectionPoint)
-	# 						vertices2.append(intersectionPoint)
-
-	# 						# vertices1.append(p1)
-	# 				elif (len(intersections) % 2) == 0:
-	# 					vertices1.append(p1)
-					
-	# 				elif (len(intersections) % 2) == 1:
-	# 					vertices2.append(p1)
-
-	# 	return [vertices1, vertices2]
-
-
-
-	# def subdivide(self, parametric):
-
-	# 	if parametric != None and len(parametric) == 2:
-	# 		self.__origin, self.__vector = parametric
-
-	# 		bLeft, bRight = self.__calcBounds()
-
-	# 		self.__left = Node(None, bLeft, self.__color)
-	# 		self.__right = Node(None, bRight, randColor())
-
-	# 	else:
-	# 		raise "Invalid parametric function values"
 
 	def subdivide(self, p1, p2, level=0):
 
@@ -152,18 +47,7 @@ class Node(object):
 
 			self.__equation = lambda x, y : a*x + b*y + c
 
-			# signal1 = signal(line_equation(p1[0], p1[1]))
-			# signal2 = signal(line_equation(p2[0], p2[1]))
-
-			# if signal1 == signal2:
-
-
-			# for p in polygons:
-
 			new_vertices = [ [], [] ]
-
-			# colors.append([randint(0, 255), randint(0, 255), randint(0, 255)])
-			# colors.append([randint(0, 255), randint(0, 255), randint(0, 255)])
 
 			for i in range(len(self.__vertices)):
 
@@ -186,12 +70,7 @@ class Node(object):
 
 				intersection = None
 
-				# print(v1, v2, pq, numerator1)
-
 				if (numerator1 != 0) or (numerator2 != 0):
-
-					# if denominator == 0.0:
-					# 	print("v1: ", v1, " v2: ", v2, " p1: ", p1, " p2: ", p2, " r: ", r, " s: ", s, " vertices: ", self.__vertices, " level: ", level)
 
 					if denominator != 0:
 						t = numerator1 / denominator
@@ -222,26 +101,8 @@ class Node(object):
 
 				pass
 
-			# pass
-
-			# vertices.append(new_vertices[0])
-			# vertices.append(new_vertices[1])
-
-			# self.__left = Node(None, new_vertices[0], self.__color)
-			# self.__right = Node(None, new_vertices[1], None)
-
 			self.__left = Node(new_vertices[0], self.__color)
 			self.__right = Node(new_vertices[1], None)
-
-			print("level: ", level, " vertices: ", new_vertices)
-			# print(new_vertices[1])
-
-				# 		self.__origin, self.__vector = parametric
-
-	# 		bLeft, bRight = self.__calcBounds()
-
-	# 		self.__left = Node(None, bLeft, self.__color)
-	# 		self.__right = Node(None, bRight, randColor())
 
 			pass
 		pass
@@ -257,8 +118,6 @@ class Node(object):
 
 		if (self.__left == None) and (self.__right == None):
 
-			# print(self.__color)
-
 			beginShape()
 			fill(self.__color[0], self.__color[1], self.__color[2])
 
@@ -267,17 +126,11 @@ class Node(object):
 
 			endShape(CLOSE)
 
-		# if self.__left == 
-
 class Tree(object):
 	
 	def __init__(self, width, height):
 		# super(Tree, self).__init__()
-		# self.__width = width
-		# self.__height = height
 		self.__root = Node([(0, 0), (width, 0), (width, height), (0, height)], None)
-
-		# self.__points = [(0, 0), (0, height), (width, height), (width, 0)]
 
 	def draw(self):
 		self.__root.draw()
@@ -304,11 +157,10 @@ def randColor():
 WIDTH = 600
 HEIGHT = 600
 
-# root_vertices = [ [0, 0], [WIDTH, 0], [WIDTH, HEIGHT], [0, HEIGHT] ]
-# vertices = []
-# colors = []
-
 tree = Tree(WIDTH, HEIGHT)
+
+startPoint = None
+endPoint = None
 
 def signal(v):
 
@@ -320,42 +172,41 @@ def signal(v):
 		return 0
 
 def setup():
-
 	size(WIDTH + 1, HEIGHT + 1)
-
-	# print("root:", root_vertices)
-	# subdivide((0, 0), (WIDTH, HEIGHT))
-
-	# tree.subdivide((0, 0), (100, 100))
-	tree.subdivide((0, 0), (WIDTH, HEIGHT))
-	tree.subdivide((90, 100), (100, 110))
-
-	# tree.subdivide((30, 10), (WIDTH, HEIGHT))
-
-	# subdivide((0, 0), (100, 100))
-	# print("vertices", vertices)
 
 	pass
 
+def mousePressed():
+
+	global startPoint
+
+	startPoint = (mouseX, mouseY)
+
+	pass
+
+def mouseReleased():
+
+	global startPoint, endPoint
+
+	endPoint = (mouseX, mouseY)
+
+	tree.subdivide(startPoint, endPoint)
+
+	startPoint = None
+	endPoint = None
+
+	pass
+
+# def mouseDragged():
+
+	# if startPoint != None:
+		# line(startPoint[0], startPoint[1], mouseX, mouseY)
+
 def draw():
 
+	global startPoint
+
 	tree.draw()
-	# for i in range(len(vertices)):
 
-	# 	fill(colors[i][0], colors[i][1], colors[i][2])
-
-	# 	beginShape()
-
-	# 	for j in range(len(vertices[i])):
-
-	# 		v = vertices[i][j]
-
-	# 		vertex(v[0], v[1])
-
-	# 		pass
-
-	# 	endShape(CLOSE)
-
-	# 	pass
-
-	# pass
+	if startPoint != None:
+		line(startPoint[0], startPoint[1], mouseX, mouseY)
