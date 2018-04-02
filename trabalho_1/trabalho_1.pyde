@@ -1,5 +1,8 @@
 from random import randint
 
+# ############################################
+# ############# Data structures ##############
+# ############################################
 class Node(object):
   
   def __init__(self, vertices, color):
@@ -14,10 +17,12 @@ class Node(object):
 
   def subdivide(self, p1, p2, level=0):
 
+    # Has children?
     if self.__equation != None:
       signal1 = signal(self.__equation(p1[0], p1[1]))
       signal2 = signal(self.__equation(p2[0], p2[1]))
 
+      # Points at same side -> subdivide
       if signal1 == signal2:
 
         if signal1 < 0:
@@ -26,15 +31,14 @@ class Node(object):
         else:
           self.__right.subdivide(p1, p2, level+1)
 
+      # Points at different side -> merge
       else:
 
-        # Implement node remove
         if signal1 < 0:
           self.__color = self.__right.__color
         else:
           self.__color = self.__left.__color
 
-        # self.__color = promovedNode.__color
         self.__equation = None
         self.__left = None
         self.__right = None
@@ -63,6 +67,7 @@ class Node(object):
         r = PVector(v2[0] - v1[0], v2[1] - v1[1])
         s = PVector(p2[0] - p1[0], p2[1] - p1[1])
 
+        # If p1 and v1 are the same point
         if (p1[0] == v1[0]) and (p1[1] == v1[1]):
           pq = PVector(p2[0] - v1[0], p2[1] - v1[1])
 
@@ -82,6 +87,8 @@ class Node(object):
             if (t >= 0) and (t <= 1):
               intersection = ( v1[0] + t*r.x, v1[1] + t*r.y )
 
+              pass
+
           side = self.__equation(v1[0], v1[1])
 
           if side < 0:
@@ -93,6 +100,8 @@ class Node(object):
           else:
             new_vertices[0].append(v1)
             new_vertices[1].append(v1)
+
+            pass
 
           if (intersection != None) and (intersection != v1) and (intersection != v2):
             new_vertices[0].append(intersection)
@@ -139,29 +148,12 @@ class Tree(object):
   def subdivide(self, p1, p2):
     self.__root.subdivide(p1, p2)
 
-  @property
-  def root(self):
-    return self.__root
 
-  @property
-  def witdh(self):
-    return self.__witdh
-
-  @property
-  def height(self):
-    return self.__height
-
+# ############################################
+# ############ Utility functions #############
+# ############################################
 def randColor():
   return (randint(0, 255), randint(0, 255), randint(0, 255))
-
-WIDTH = 800
-# WIDTH = 600
-HEIGHT = 600
-
-tree = Tree(WIDTH, HEIGHT)
-
-startPoint = None
-endPoint = None
 
 def signal(v):
 
@@ -171,6 +163,22 @@ def signal(v):
     return -1
   else:
     return 0
+
+# ############################################
+# ############ Global variables ##############
+# ############################################
+
+WIDTH = 800
+HEIGHT = 600
+
+tree = Tree(WIDTH, HEIGHT)
+
+startPoint = None
+endPoint = None
+
+# ############################################
+# ########## Processing functions ############
+# ############################################
 
 def setup():
   size(WIDTH + 1, HEIGHT + 1)
