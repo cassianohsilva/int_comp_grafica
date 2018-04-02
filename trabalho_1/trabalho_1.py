@@ -2,11 +2,8 @@ from random import randint
 
 class Node(object):
 	
-	"""
-		parametric list containing 2 elements with 2 coordinates (origin, vector)
-	"""
 	def __init__(self, vertices, color):
-		# super(Tree, self).__init__()
+		super(Node, self).__init__()
 
 		self.__color = color if ( (color != None) and (len(color) == 3) ) else randColor()
 		self.__vertices = vertices
@@ -21,21 +18,27 @@ class Node(object):
 			signal1 = signal(self.__equation(p1[0], p1[1]))
 			signal2 = signal(self.__equation(p2[0], p2[1]))
 
-			# signal1 = signal(line_equation(p1[0], p1[1]))
-			# signal2 = signal(line_equation(p2[0], p2[1]))
-
 			if signal1 == signal2:
 
-				if signal1 > 0:
+				if signal1 < 0:
 					self.__left.subdivide(p1, p2, level+1)
 
 				else:
 					self.__right.subdivide(p1, p2, level+1)
 
-				pass
-
 			else:
+
 				# Implement node remove
+				if signal1 < 0:
+					self.__color = self.__right.__color
+				else:
+					self.__color = self.__left.__color
+
+				# self.__color = promovedNode.__color
+				self.__equation = None
+				self.__left = None
+				self.__right = None
+
 				pass
 
 		else:
@@ -81,12 +84,10 @@ class Node(object):
 
 					side = self.__equation(v1[0], v1[1])
 
-					# print("\tv1: ", v1, " v2: ", v2, " side: ", side)
-
-					if side > 0:
+					if side < 0:
 						new_vertices[0].append(v1)
 
-					elif side < 0:
+					elif side > 0:
 						new_vertices[1].append(v1)
 
 					else:
@@ -129,7 +130,7 @@ class Node(object):
 class Tree(object):
 	
 	def __init__(self, width, height):
-		# super(Tree, self).__init__()
+		super(Tree, self).__init__()
 		self.__root = Node([(0, 0), (width, 0), (width, height), (0, height)], None)
 
 	def draw(self):
@@ -153,8 +154,8 @@ class Tree(object):
 def randColor():
 	return (randint(0, 255), randint(0, 255), randint(0, 255))
 
-# WIDTH = 800
-WIDTH = 600
+WIDTH = 800
+# WIDTH = 600
 HEIGHT = 600
 
 tree = Tree(WIDTH, HEIGHT)
@@ -190,17 +191,13 @@ def mouseReleased():
 
 	endPoint = (mouseX, mouseY)
 
-	tree.subdivide(startPoint, endPoint)
+	if startPoint != endPoint:
+		tree.subdivide(startPoint, endPoint)
 
 	startPoint = None
 	endPoint = None
 
 	pass
-
-# def mouseDragged():
-
-	# if startPoint != None:
-		# line(startPoint[0], startPoint[1], mouseX, mouseY)
 
 def draw():
 
