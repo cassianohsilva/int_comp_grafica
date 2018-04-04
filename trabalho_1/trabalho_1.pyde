@@ -5,43 +5,68 @@ from random import randint
 # ############################################
 class Node(object):
   
-  def __init__(self, vertices, color):
+  def __init__(self, vertices, color=None):
     super(Node, self).__init__()
 
     self.__color = color if ( (color != None) and (len(color) == 3) ) else randColor()
     self.__vertices = vertices
     self.__equation = None
+    self.__intersectionPoints = None
 
     self.__left = None
     self.__right = None
 
-  def subdivide(self, p1, p2, level=0):
+  def hasChildren(self):
+    return not ((self.__equation == None) or (self.__left == None) or (self.__right == None))
 
-    # Has children?
-    if self.__equation != None:
+  """
+    Subdivide or merge node elements
+  """ 
+  def recalculateBSP(self, p1, p2, markedForMerge=False):
+
+    # Same point?
+    # Do nothing
+    if p1 == p2:
+      return
+
+    # Not a leaf node?
+    # Let's check for any collision or subdivision
+    if self.hasChildren():
       signal1 = signal(self.__equation(p1[0], p1[1]))
       signal2 = signal(self.__equation(p2[0], p2[1]))
 
-      # Points at same side -> subdivide
-      if signal1 == signal2:
+      # Points are not at the same side (collision)
+      # or a collision was previously detected
+      if (signal1 != signal2) or markedForMerge:
 
-        if signal1 < 0:
-          self.__left.subdivide(p1, p2, level+1)
+        child = self.__left if signal1 < 0 else self.__right
 
+        # Not a leaf node?
+        if child.hasChildren():
+          child.recalculateBSP(p1, p2, True)
+
+        # Merge the leaves children nodes
         else:
-          self.__right.subdivide(p1, p2, level+1)
 
-      # Points at different side -> merge
+          if signal1 < 0:
+            self.__color = self.__right.__color
+          else:
+            self.__color = self.__left.__color
+
+          self.__equation = None
+          self.__left = None
+          self.__right = None
+          self.__intersectionPoints = None
+
+      # No collision or subdivision?
+      # Try again
       else:
 
         if signal1 < 0:
-          self.__color = self.__right.__color
-        else:
-          self.__color = self.__left.__color
+          self.__left.recalculateBSP(p1, p2)
 
-        self.__equation = None
-        self.__left = None
-        self.__right = None
+        else:
+          self.__right.recalculateBSP(p1, p2)
 
         pass
 
@@ -55,6 +80,7 @@ class Node(object):
       self.__equation = lambda x, y : a*x + b*y + c
 
       new_vertices = [ [], [] ]
+      intersectionPoints = []
 
       for i in range(len(self.__vertices)):
 
@@ -87,7 +113,6 @@ class Node(object):
             if (t >= 0) and (t <= 1):
               intersection = ( v1[0] + t*r.x, v1[1] + t*r.y )
 
-              pass
 
           side = self.__equation(v1[0], v1[1])
 
@@ -101,22 +126,59 @@ class Node(object):
             new_vertices[0].append(v1)
             new_vertices[1].append(v1)
 
-            pass
 
           if (intersection != None) and (intersection != v1) and (intersection != v2):
             new_vertices[0].append(intersection)
             new_vertices[1].append(intersection)
+
+            intersectionPoints.append(intersection)
 
           pass
 
         pass
 
       self.__left = Node(new_vertices[0], self.__color)
-      self.__right = Node(new_vertices[1], None)
+      self.__right = Node(new_vertices[1])
+
+      self.__intersectionPoints = intersectionPoints
 
       pass
     pass
 
+  """
+    Check if the line segment between p1 and p2 collide with some edge
+  """
+  def checkCollison(self, p1, p2, collision=False):
+
+    if p1 == p2:
+      return None
+
+    if self.hasChildren():
+      signal1 = signal(self.__equation(p1[0], p1[1]))
+      signal2 = signal(self.__equation(p2[0], p2[1]))
+
+      if (signal1 != signal2) or collision:
+
+        child = self.__left if signal1 < 0 else self.__right
+
+        if child.hasChildren():
+          return child.checkCollison(p1, p2, True)
+
+        else:
+          return self.__intersectionPoints
+
+      else:
+
+        if signal1 < 0:
+          return self.__left.checkCollison(p1, p2)
+
+        else:
+          return self.__right.checkCollison(p1, p2)
+
+        pass
+
+    else:
+      return None
 
   def draw(self):
     
@@ -145,13 +207,16 @@ class Tree(object):
   def draw(self):
     self.__root.draw()
 
-  def subdivide(self, p1, p2):
-    self.__root.subdivide(p1, p2)
+  def recalculateBSP(self, p1, p2):
+    self.__root.recalculateBSP(p1, p2)
 
+  def checkCollison(self, p1, p2):
+    return self.__root.checkCollison(p1, p2)
 
 # ############################################
 # ############ Utility functions #############
 # ############################################
+
 def randColor():
   return (randint(0, 255), randint(0, 255), randint(0, 255))
 
@@ -176,6 +241,8 @@ tree = Tree(WIDTH, HEIGHT)
 startPoint = None
 endPoint = None
 
+collisionEdge = None
+
 # ############################################
 # ########## Processing functions ############
 # ############################################
@@ -183,7 +250,6 @@ endPoint = None
 def setup():
   size(WIDTH + 1, HEIGHT + 1)
 
-  pass
 
 def mousePressed():
 
@@ -191,27 +257,41 @@ def mousePressed():
 
   startPoint = (mouseX, mouseY)
 
-  pass
 
-def mouseReleased():
+def mouseDragged():
 
-  global startPoint, endPoint
+  global startPoint, endPoint, collisionEdge
 
   endPoint = (mouseX, mouseY)
 
+  collisionEdge = tree.checkCollison(startPoint, endPoint)
+
+
+def mouseReleased():
+
+  global startPoint, endPoint, collisionEdge
+
   if startPoint != endPoint:
-    tree.subdivide(startPoint, endPoint)
+    tree.recalculateBSP(startPoint, endPoint)
 
   startPoint = None
   endPoint = None
+  collisionEdge = None
 
-  pass
 
 def draw():
 
-  global startPoint
+  global startPoint, collisionEdge
 
   tree.draw()
 
   if startPoint != None:
     line(startPoint[0], startPoint[1], mouseX, mouseY)
+
+  if collisionEdge:
+
+    stroke(255)
+    strokeWeight(2)
+    line(collisionEdge[0][0], collisionEdge[0][1], collisionEdge[1][0], collisionEdge[1][1])
+    strokeWeight(1)
+    stroke(0)
