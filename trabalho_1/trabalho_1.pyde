@@ -285,9 +285,6 @@ def draw():
 
   tree.draw()
 
-  if startPoint != None:
-    line(startPoint[0], startPoint[1], mouseX, mouseY)
-
   if collisionEdge:
 
     stroke(255)
@@ -295,3 +292,6 @@ def draw():
     line(collisionEdge[0][0], collisionEdge[0][1], collisionEdge[1][0], collisionEdge[1][1])
     strokeWeight(1)
     stroke(0)
+
+  if startPoint != None:
+    line(startPoint[0], startPoint[1], mouseX, mouseY)
