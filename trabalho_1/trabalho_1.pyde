@@ -218,7 +218,8 @@ class Tree(object):
 # ############################################
 
 def randColor():
-  return (randint(0, 255), randint(0, 255), randint(0, 255))
+  # Not too black or too white
+  return (randint(25, 230), randint(25, 230), randint(25, 230))
 
 def signal(v):
 
