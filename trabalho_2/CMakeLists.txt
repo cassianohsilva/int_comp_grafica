@@ -14,6 +14,10 @@ add_executable(picking ${SOURCE_FILES})
 
 find_package(PkgConfig REQUIRED)
 pkg_search_module(GLFW REQUIRED glfw3)
+#pkg_search_module(DL_LIBRARY REQUIRED dl)
+pkg_search_module(OpenGL REQUIRED gl)
+pkg_search_module(X11 REQUIRED x11)
 
-include_directories(${GLFW_INCLUDE_DIRS})
-# target_link_libraries(picking ${GLFW_LIBRARIES})
+include_directories(${GLFW_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR} ${X11_INCLUDE_DIR})
+
+target_link_libraries(picking ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES} ${X11_LIBRARIES})
