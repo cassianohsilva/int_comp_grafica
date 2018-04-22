@@ -256,6 +256,9 @@ class Vector(object):
 # ############ Utility functions #############
 # ############################################
 
+def clamp(val, vmax, vmin=0):
+	return max(vmin, min(val, vmax))
+
 def randColor():
 	# Not too black or too white
 	return (uniform(0.1, 0.9), uniform(0.1, 0.9), uniform(0.1, 0.9))
@@ -280,8 +283,6 @@ def convertOpenGLToWindow(point):
 	global WIDTH, HEIGHT
 
 	return (point[0] * WIDTH, (1 - point[1]) * HEIGHT)
-
-	pass
 
 # ############################################
 # ############ Global variables ##############
@@ -309,7 +310,7 @@ def mousePressedOrReleased(button, state, x, y):
 	if button == GLUT_LEFT_BUTTON:
 
 		if state == GLUT_DOWN:
-			startPoint = (x, y)
+			startPoint = (clamp(x, WIDTH), clamp(y, HEIGHT))
 
 		else:
 
@@ -326,7 +327,7 @@ def mouseDragged(x, y):
 	global startPoint, endPoint, collisionEdge
 
 	if startPoint != None:
-		endPoint = (x, y)
+		endPoint = (clamp(x, WIDTH), clamp(y, HEIGHT))
 
 		# collisionEdge = tree.checkCollison(convertWindowToOpenGL(startPoint), convertWindowToOpenGL(endPoint))
 	# print(convertWindowToOpenGL((x, y)))
@@ -364,8 +365,8 @@ def setup():
 	global window
 
 	glutInit()
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH)
-	glutInitWindowSize(WIDTH, HEIGHT)
+	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH)
+	glutInitWindowSize(WIDTH + 1, HEIGHT + 1)
 	# glutInitWindowPosition(0, 0)
 	window = glutCreateWindow("Trabalho 2")
 
@@ -391,6 +392,7 @@ def main():
 	glutMouseFunc(mousePressedOrReleased)
 	glutMotionFunc(mouseDragged)
 	glutMainLoop()
+
 
 if __name__ == '__main__':
 	main()
