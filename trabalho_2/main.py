@@ -322,9 +322,6 @@ class Vector(object):
 		else:
 			raise IndexError()
 
-	# def asTuple(self):
-	# 	return (self.x, self.y, self.z)
-
 class PerspectiveCamera(object):
 
 	def __init__(self, position, direction, up):
@@ -345,8 +342,6 @@ class PerspectiveCamera(object):
 		gluPerspective(40.0, WIDTH / HEIGHT, 1.0, 10.0)
 
 		gluLookAt(*self.__position, *(self.__position + self.__direction), *self.__up)
-
-		# gluPerspective(*self.__position, *self.__direction, *self.__up)
 
 		glMatrixMode(GL_MODELVIEW)
 
@@ -427,6 +422,8 @@ perspective = False
 
 camera = None
 
+
+
 # ############################################
 # ############ OpenGL callbacks ##############
 # ############################################
@@ -442,7 +439,7 @@ def mousePressedOrReleased(button, state, x, y):
 
 		else:
 
-			if (endPoint != None) and (startPoint != endPoint):
+			if not perspective and (endPoint != None) and (startPoint != endPoint):
 				tree.recalculateBSP(convertWindowToOpenGL(startPoint), convertWindowToOpenGL(endPoint))
 
 			startPoint = None
@@ -498,16 +495,21 @@ def draw():
 
 	tree.draw()
 
-	if (startPoint != None) and (endPoint != None):
+	if not perspective:
+		if (startPoint != None) and (endPoint != None):
 
-		glColor(0, 0, 0)
-		
-		glBegin(GL_LINE_STRIP)
+			glColor(0, 0, 0)
 
-		glVertex(*convertWindowToOpenGL(startPoint))
-		glVertex(*convertWindowToOpenGL(endPoint))
+			glBegin(GL_LINE_STRIP)
 
-		glEnd()
+			glVertex(*convertWindowToOpenGL(startPoint))
+			glVertex(*convertWindowToOpenGL(endPoint))
+
+			glEnd()
+
+	else:
+		# 3D view
+		pass
 
 	glutSwapBuffers()
 
