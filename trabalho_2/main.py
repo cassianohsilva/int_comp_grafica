@@ -6,6 +6,7 @@ from OpenGL.GLUT import *
 
 from random import uniform
 from numbers import Number
+from math import sqrt
 
 # ############################################
 # ############# Data structures ##############
@@ -249,8 +250,119 @@ class Vector(object):
 		else:
 			raise TypeError('Invalid operator types')
 
-	def __repr__(self):
-		return (self.x, self.y, self.z)
+	def __imul__(self, val):
+
+		if isinstance(val, Vector):
+			self.x *= val.x
+			self.y *= val.y
+			self.x *= val.z
+
+			return self
+
+		elif isinstance(val, Number):
+			self.x *= val
+			self.y *= val
+			self.z *= val
+
+			return self
+
+		else:
+			raise TypeError('Invalid operator types')
+
+	def __add__(self, val):
+
+		if isinstance(val, Vector):
+			return Vector(self.x + val.x, self.y + val.y, self.x + val.z)
+		else:
+			raise TypeError('Invalid operator types')
+
+	def __iadd__(self, val):
+
+		if isinstance(val, Vector):
+			self.x += val.x
+			self.y += val.y
+			self.x += val.z
+
+			return self
+
+		else:
+			raise TypeError('Invalid operator types')
+
+	def __len__(self):
+		return 3
+
+	def cross(self, val):
+
+		if isinstance(val, Vector):
+			return Vector(
+				(self.y * val.z) - (self.z * val.y),
+				(self.z * val.x) - (self.x * val.z),
+				(self.x * val.y) - (self.y * val.x))
+		else:
+			raise TypeError('Invalid operator types')
+
+	@property
+	def magnitude(self):
+		return sqrt(pow(self.x, 2) + pow(self.y, 2) + pow(self.z, 2))
+
+	@property
+	def normalized(self):
+
+		m = self.magnitude
+
+		return Vector(self.x / m, self.y / m, self.z / m)
+
+	# def __repr__(self):
+	# 	return self.asTuple()
+
+	def __getitem__(self, key):
+
+		if (key >= 0) and (key < 3):
+			return (self.x, self.y, self.z)[key]
+		else:
+			raise IndexError()
+
+	# def asTuple(self):
+	# 	return (self.x, self.y, self.z)
+
+class PerspectiveCamera(object):
+
+	def __init__(self, position, direction, up):
+		super(PerspectiveCamera, self).__init__()
+		self.__position = Vector(*position)
+		self.__direction = Vector(*direction)
+		self.__up = Vector(*up)
+
+		# Copy passed parameters
+		self.__initialPosition = position
+		self.__initialDirection = direction
+		self.__initialUp = up
+
+	def apply(self):
+		glMatrixMode(GL_PROJECTION)
+		glLoadIdentity()
+
+		gluPerspective(40.0, WIDTH / HEIGHT, 1.0, 10.0)
+
+		gluLookAt(*self.__position, *(self.__position + self.__direction), *self.__up)
+
+		# gluPerspective(*self.__position, *self.__direction, *self.__up)
+
+		glMatrixMode(GL_MODELVIEW)
+
+	def reset(self):
+		self.__position = Vector(*self.__initialPosition)
+		self.__direction = Vector(*self.__initialDirection)
+		self.__up = Vector(*self.__initialUp)
+
+	def move(self, dx, dy):
+
+		left = self.__direction.cross(self.__up).normalized
+
+		# self.__position += left * Vector(dx, dy, 0)
+		self.__position += (left * Vector(dx, 0, 0)) + Vector(0, -dy, 0)
+		# self.__direction += Vector(0, 0, dy)
+
 
 # ############################################
 # ############ Utility functions #############
@@ -284,6 +396,15 @@ def convertOpenGLToWindow(point):
 
 	return (point[0] * WIDTH, (1 - point[1]) * HEIGHT)
 
+def applyCurrentMatrix():
+
+	if perspective:
+		# return perspectiveMatrix
+		camera.apply()
+	else:
+		glLoadMatrixd(orthoMatrix)
+		# return orthoMatrix
+
 # ############################################
 # ############ Global variables ##############
 # ############################################
@@ -298,6 +419,13 @@ endPoint = None
 collisionEdge = None
 
 window = None
+
+orthoMatrix = None
+perspectiveMatrix = None
+
+perspective = False
+
+camera = None
 
 # ############################################
 # ############ OpenGL callbacks ##############
@@ -314,7 +442,7 @@ def mousePressedOrReleased(button, state, x, y):
 
 		else:
 
-			if startPoint != endPoint:
+			if (endPoint != None) and (startPoint != endPoint):
 				tree.recalculateBSP(convertWindowToOpenGL(startPoint), convertWindowToOpenGL(endPoint))
 
 			startPoint = None
@@ -333,25 +461,49 @@ def mouseDragged(x, y):
 	# print(convertWindowToOpenGL((x, y)))
 	# glutWarpPointer(0, 0)
 
+def keyPressed(key, x, y):
+
+	global perspective
+
+	if key == b'o':
+		perspective = not perspective
+
+	elif key == b'd':
+		camera.move(0.05, 0)
+
+	elif key == b'a':
+		camera.move(-0.05, 0)
+
+	elif key == b'w':
+		camera.move(0, 0.05)
+
+	elif key == b's':
+		camera.move(0, -0.05)
 
 def draw():
+
+	# global perspectiveMatrix, orthoMatrix, startPoint, endPoint, tree
+	# print(perspectiveMatrix)
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+	glMatrixMode(GL_PROJECTION)
+	glLoadIdentity()
+
+	# glLoadMatrixd(getCurrentMatrix())
+	applyCurrentMatrix()
+
+	glMatrixMode(GL_MODELVIEW)
 	glLoadIdentity()
 
 	tree.draw()
 
 	if (startPoint != None) and (endPoint != None):
 
-		# print("abc")
-
-		# print(startPoint, endPoint)
 		glColor(0, 0, 0)
-		# glColor(1, 1, 1)
 		
 		glBegin(GL_LINE_STRIP)
 
-		# glVertex(*startPoint)
-		# glVertex(*endPoint)
 		glVertex(*convertWindowToOpenGL(startPoint))
 		glVertex(*convertWindowToOpenGL(endPoint))
 
@@ -362,7 +514,7 @@ def draw():
 
 def setup():
 
-	global window
+	global window, perspectiveMatrix, orthoMatrix, camera
 
 	glutInit()
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH)
@@ -370,16 +522,35 @@ def setup():
 	# glutInitWindowPosition(0, 0)
 	window = glutCreateWindow("Trabalho 2")
 
-	gluLookAt(
-			0.0, 0.0, -1.0,
-			0.5, 0.5, 0.0,
-			0.0, 1.0, 0.0)
+	# gluLookAt(
+	# 		0.0, 0.0, -1.0,
+	# 		0.5, 0.5, 0.0,
+	# 		0.0, 1.0, 0.0)
+
+	camera = PerspectiveCamera(
+		(0.5, 0.5, 1.5),
+		# (0.5, 0.5, 0.0),
+		(0.0, 0.0, -1.5),
+		(0.0, 1.0, 0.0))
 
 	glMatrixMode(GL_PROJECTION)
+
+	# Save first perspective matrix
+	# glLoadIdentity()
+	# gluPerspective(40.0, WIDTH / HEIGHT, 1.0, 10.0)
+	# perspectiveMatrix = glGetDouble(GL_PROJECTION_MATRIX)
+
+	# Save first ortho matrix
 	glLoadIdentity()
 	glOrtho(0.0, 1.0, 0.0, 1.0, -0.5, 0.5)
+	orthoMatrix = glGetDouble(GL_PROJECTION_MATRIX)
 
 	glMatrixMode(GL_MODELVIEW)
+
+	# glGetDouble(GL_PROJECTION_MATRIX, perspectiveMatrix)
+	# glLoadMatrix(perspectiveMatrix)
+
+	# print(perspectiveMatrix, orthoMatrix)
 
 	glLineWidth(2)
 
@@ -391,6 +562,7 @@ def main():
 	glutIdleFunc(draw)
 	glutMouseFunc(mousePressedOrReleased)
 	glutMotionFunc(mouseDragged)
+	glutKeyboardFunc(keyPressed)
 	glutMainLoop()
 
 
