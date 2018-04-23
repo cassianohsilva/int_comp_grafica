@@ -201,9 +201,11 @@ class Node(object):
 
 			if perspective:
 
-				glEnable(GL_LIGHTING)
-				glEnable(GL_COLOR_MATERIAL)
-				glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE)
+				# glEnable(GL_LIGHTING)
+				# glEnable(GL_COLOR_MATERIAL)
+				# glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE)
+
+				glEnable(GL_DEPTH_TEST)
 
 				glColor(self.__color[0], self.__color[1], self.__color[2])
 
@@ -221,7 +223,7 @@ class Node(object):
 
 				glEnd()
 
-				glDisable(GL_LIGHTING)
+				# glDisable(GL_LIGHTING)
 
 				# Front and back face
 				# Back face has inversed vertices orientations
@@ -233,6 +235,8 @@ class Node(object):
 						glVertex(v[0], v[1], v[2])
 
 					glEnd()
+
+				glDisable(GL_DEPTH_TEST)
 
 			else:
 
@@ -321,10 +325,6 @@ class Vector(object):
 			return Vector(self.x * val, self.y * val, self.z * val)
 		else:
 			raise TypeError('Invalid operator types')
-
-			# return Vector(self.x + val.x, self.y + val.y, self.z + val.z)
-		# else:
-		# 	raise TypeError('Invalid operator types')
 
 	def __add__(self, val):
 
@@ -428,10 +428,6 @@ class PerspectiveCamera(object):
 
 	def move(self, dx, dy):
 
-		# radius = (self.__direction * (1 + dz)).magnitude
-
-		# self.__direction += self.__direction.magnitude * (1 + dradius)
-
 		radius = self.__direction.magnitude
 
 		left = self.__direction.cross(self.__up).normalized
@@ -444,9 +440,6 @@ class PerspectiveCamera(object):
 		# Correct vectors
 		left = tempDirection.cross(self.__up).normalized
 		up = left.cross(tempDirection).normalized
-
-		# tempDirection = radius * (center - tempPosition).normalized
-
 
 		self.__direction = tempDirection
 
