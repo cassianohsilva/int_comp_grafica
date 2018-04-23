@@ -13,11 +13,12 @@ from math import sqrt
 # ############################################
 class Node(object):
 
-	def __init__(self, vertices, color=None):
+	def __init__(self, vertices, editableVertices=None, color=None):
 		super(Node, self).__init__()
 
 		self.__color = color if ( (color != None) and (len(color) == 3) ) else randColor()
-		self.__vertices = vertices
+		self.__vertices = [ (v[0], v[1], 0) for v in vertices ]
+		self.__editableVertices = [ (v[0], v[1], -BSP_DEPTH) for v in vertices ]
 		self.__equation = None
 		self.__intersectionPoints = None
 
@@ -188,31 +189,61 @@ class Node(object):
 		else:
 			return None
 
-	def draw(self):
+	def draw(self, perspective):
 		
 		if self.__left != None:
-			self.__left.draw()
+			self.__left.draw(perspective)
 
 		if self.__right != None:
-			self.__right.draw()
+			self.__right.draw(perspective)
 
 		if (self.__left == None) and (self.__right == None):
 
-			# Draw polygon
-			glColor(self.__color[0], self.__color[1], self.__color[2])
-			glBegin(GL_POLYGON)
+			if perspective:
 
-			for p in self.__vertices:
-				glVertex(p[0], p[1])
-			glEnd()
+				glColor(self.__color[0], self.__color[1], self.__color[2])
 
-			# Draw border
-			glColor(0, 0, 0)
-			glBegin(GL_LINE_LOOP)
+				# Borders
+				glBegin(GL_QUAD_STRIP)
 
-			for p in self.__vertices:
-				glVertex(p[0], p[1])
-			glEnd()
+				for v in range(len(self.__vertices) + 1):
+
+					i = (v + 1) % len(self.__vertices)
+
+					glVertex(self.__vertices[i][0], self.__vertices[i][1], self.__vertices[i][2])
+					glVertex(self.__editableVertices[i][0], self.__editableVertices[i][1], self.__editableVertices[i][2])
+					# glVertex(self.__vertices[nextI][0], self.__vertices[nextI][1], self.__vertices[nextI][2])
+					# glVertex(self.__editableVertices[nextI][0], self.__editableVertices[nextI][1], self.__editableVertices[nextI][2])
+
+				glEnd()
+
+				# Front and back face
+				# Back face has inversed vertices orientations
+				for p in (self.__vertices, self.__editableVertices[::-1]):
+
+					glBegin(GL_POLYGON)
+
+					for v in p:
+						glVertex(v[0], v[1], v[2])
+
+					glEnd()
+
+			else:
+				# Draw polygon
+				glColor(self.__color[0], self.__color[1], self.__color[2])
+				glBegin(GL_POLYGON)
+
+				for p in self.__vertices:
+					glVertex(p[0], p[1], p[2])
+				glEnd()
+
+				# Draw border
+				glColor(0, 0, 0)
+				glBegin(GL_LINE_LOOP)
+
+				for p in self.__vertices:
+					glVertex(p[0], p[1], p[2])
+				glEnd()
 
 class Tree(object):
 
@@ -220,10 +251,11 @@ class Tree(object):
 	def __init__(self):
 		super(Tree, self).__init__()
 		# self.__root = Node([(0, 0), (width, 0), (width, height), (0, height)], None)
+		# self.__root = Node([(0, 0), (0, 1), (1, 1), (1, 0)], None)
 		self.__root = Node([(0, 0), (0, 1), (1, 1), (1, 0)], None)
 
-	def draw(self):
-		self.__root.draw()
+	def draw(self, perspective=False):
+		self.__root.draw(perspective)
 
 	def recalculateBSP(self, p1, p2):
 		self.__root.recalculateBSP(p1, p2)
@@ -405,6 +437,7 @@ def applyCurrentMatrix():
 # ############################################
 
 WIDTH, HEIGHT = 800, 600
+BSP_DEPTH = 0.1
 
 tree = Tree()
 
@@ -481,6 +514,7 @@ def draw():
 
 	# global perspectiveMatrix, orthoMatrix, startPoint, endPoint, tree
 	# print(perspectiveMatrix)
+	global perspective
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
@@ -493,7 +527,7 @@ def draw():
 	glMatrixMode(GL_MODELVIEW)
 	glLoadIdentity()
 
-	tree.draw()
+	tree.draw(perspective)
 
 	if not perspective:
 		if (startPoint != None) and (endPoint != None):
