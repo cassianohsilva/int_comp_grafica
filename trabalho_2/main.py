@@ -6,14 +6,14 @@ from OpenGL.GLUT import *
 
 from random import uniform
 from numbers import Number
-from math import sqrt
+from math import sqrt, sin, cos
 
 # ############################################
 # ############# Data structures ##############
 # ############################################
 class Node(object):
 
-	def __init__(self, vertices, editableVertices=None, color=None):
+	def __init__(self, vertices, color=None, editableVertices=None):
 		super(Node, self).__init__()
 
 		self.__color = color if ( (color != None) and (len(color) == 3) ) else randColor()
@@ -201,6 +201,10 @@ class Node(object):
 
 			if perspective:
 
+				glEnable(GL_LIGHTING)
+				glEnable(GL_COLOR_MATERIAL)
+				glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE)
+
 				glColor(self.__color[0], self.__color[1], self.__color[2])
 
 				# Borders
@@ -217,6 +221,8 @@ class Node(object):
 
 				glEnd()
 
+				glDisable(GL_LIGHTING)
+
 				# Front and back face
 				# Back face has inversed vertices orientations
 				for p in (self.__vertices, self.__editableVertices[::-1]):
@@ -229,6 +235,9 @@ class Node(object):
 					glEnd()
 
 			else:
+
+				glDisable(GL_LIGHTING)
+
 				# Draw polygon
 				glColor(self.__color[0], self.__color[1], self.__color[2])
 				glBegin(GL_POLYGON)
@@ -282,6 +291,9 @@ class Vector(object):
 		else:
 			raise TypeError('Invalid operator types')
 
+	def __neg__(self):
+		return Vector(-self.x, -self.y, -self.z)
+
 	def __imul__(self, val):
 
 		if isinstance(val, Vector):
@@ -301,6 +313,19 @@ class Vector(object):
 		else:
 			raise TypeError('Invalid operator types')
 
+	def __rmul__(self, val):
+
+		if isinstance(val, Vector):
+			return self
+		elif isinstance(val, Number):
+			return Vector(self.x * val, self.y * val, self.z * val)
+		else:
+			raise TypeError('Invalid operator types')
+
+			# return Vector(self.x + val.x, self.y + val.y, self.z + val.z)
+		# else:
+		# 	raise TypeError('Invalid operator types')
+
 	def __add__(self, val):
 
 		if isinstance(val, Vector):
@@ -314,6 +339,25 @@ class Vector(object):
 			self.x += val.x
 			self.y += val.y
 			self.z += val.z
+
+			return self
+
+		else:
+			raise TypeError('Invalid operator types')
+
+	def __sub__(self, val):
+
+		if isinstance(val, Vector):
+			return Vector(self.x - val.x, self.y - val.y, self.z - val.z)
+		else:
+			raise TypeError('Invalid operator types')
+
+	def __isub__(self, val):
+
+		if isinstance(val, Vector):
+			self.x -= val.x
+			self.y -= val.y
+			self.z -= val.z
 
 			return self
 
@@ -344,8 +388,8 @@ class Vector(object):
 
 		return Vector(self.x / m, self.y / m, self.z / m)
 
-	# def __repr__(self):
-	# 	return self.asTuple()
+	def __repr__(self):
+		return str((self.x, self.y, self.z))
 
 	def __getitem__(self, key):
 
@@ -384,11 +428,31 @@ class PerspectiveCamera(object):
 
 	def move(self, dx, dy):
 
-		left = self.__direction.cross(self.__up).normalized
+		# radius = (self.__direction * (1 + dz)).magnitude
 
-		# self.__position += left * Vector(dx, dy, 0)
-		self.__position += (left * Vector(dx, 0, 0)) + Vector(0, 0, -dy)
-		# self.__direction += Vector(0, 0, dy)
+		# self.__direction += self.__direction.magnitude * (1 + dradius)
+
+		radius = self.__direction.magnitude
+
+		left = self.__direction.cross(self.__up).normalized
+		center = self.__position + self.__direction
+
+		# New position and direction
+		tempPosition = self.__position + (left * dx) + (self.__up * dy)
+		tempDirection = radius * (center - tempPosition).normalized
+
+		# Correct vectors
+		left = tempDirection.cross(self.__up).normalized
+		up = left.cross(tempDirection).normalized
+
+		# tempDirection = radius * (center - tempPosition).normalized
+
+
+		self.__direction = tempDirection
+
+		self.__position = center - self.__direction
+
+		self.__up = up
 
 
 # ############################################
@@ -564,9 +628,9 @@ def setup():
 	# 		0.0, 1.0, 0.0)
 
 	camera = PerspectiveCamera(
-		(0.5, 0.5, 1.5),
+		(0.5, 0.5, 2.5),
 		# (0.5, 0.5, 0.0),
-		(0.0, 0.0, -1.5),
+		(0.0, 0.0, -2.5),
 		(0.0, 1.0, 0.0))
 
 	glMatrixMode(GL_PROJECTION)
@@ -582,6 +646,20 @@ def setup():
 	orthoMatrix = glGetDouble(GL_PROJECTION_MATRIX)
 
 	glMatrixMode(GL_MODELVIEW)
+
+	# #####################################################################
+
+	glEnable(GL_LIGHTING)
+	glEnable(GL_LIGHT0)
+
+	glLightfv(GL_LIGHT0, GL_AMBIENT, [0.2, 0.2, 0.2, 1.0])
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
+	glLightfv(GL_LIGHT0, GL_SPECULAR, [0.5, 0.5, 0.5, 1.0])
+	glLightfv(GL_LIGHT0, GL_POSITION, [1.0, 1.0, -4.0, 1.0])
+
+	glDisable(GL_LIGHTING)
+
+	# #####################################################################
 
 	# glGetDouble(GL_PROJECTION_MATRIX, perspectiveMatrix)
 	# glLoadMatrix(perspectiveMatrix)
