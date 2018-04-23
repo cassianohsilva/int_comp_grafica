@@ -244,7 +244,7 @@ class Vector(object):
 	def __mul__(self, val):
 
 		if isinstance(val, Vector):
-			return Vector(self.x * val.x, self.y * val.y, self.x * val.z)
+			return Vector(self.x * val.x, self.y * val.y, self.z * val.z)
 		elif isinstance(val, Number):
 			return Vector(self.x * val, self.y * val, self.z * val)
 		else:
@@ -255,7 +255,7 @@ class Vector(object):
 		if isinstance(val, Vector):
 			self.x *= val.x
 			self.y *= val.y
-			self.x *= val.z
+			self.z *= val.z
 
 			return self
 
@@ -272,7 +272,7 @@ class Vector(object):
 	def __add__(self, val):
 
 		if isinstance(val, Vector):
-			return Vector(self.x + val.x, self.y + val.y, self.x + val.z)
+			return Vector(self.x + val.x, self.y + val.y, self.z + val.z)
 		else:
 			raise TypeError('Invalid operator types')
 
@@ -281,7 +281,7 @@ class Vector(object):
 		if isinstance(val, Vector):
 			self.x += val.x
 			self.y += val.y
-			self.x += val.z
+			self.z += val.z
 
 			return self
 
@@ -360,7 +360,7 @@ class PerspectiveCamera(object):
 		left = self.__direction.cross(self.__up).normalized
 
 		# self.__position += left * Vector(dx, dy, 0)
-		self.__position += (left * Vector(dx, 0, 0)) + Vector(0, -dy, 0)
+		self.__position += (left * Vector(dx, 0, 0)) + Vector(0, 0, -dy)
 		# self.__direction += Vector(0, 0, dy)
 
 
