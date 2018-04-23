@@ -567,6 +567,10 @@ def keyPressed(key, x, y):
 	elif key == b's':
 		camera.move(0, -0.05)
 
+	elif key == b'r':
+		if perspective:
+			camera.reset()
+
 def draw():
 
 	# global perspectiveMatrix, orthoMatrix, startPoint, endPoint, tree
