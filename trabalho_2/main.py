@@ -18,7 +18,7 @@ class Node(object):
 
 		self.__color = color if ( (color != None) and (len(color) == 3) ) else randColor()
 		self.__vertices = [ (v[0], v[1], 0) for v in vertices ]
-		self.__editableVertices = [ (v[0], v[1], -BSP_DEPTH) for v in vertices ]
+		self.__editableVertices = [ [v[0], v[1], BSP_DEPTH] for v in vertices ]
 		self.__equation = None
 		self.__intersectionPoints = None
 
@@ -189,17 +189,30 @@ class Node(object):
 		else:
 			return None
 
-	def draw(self, perspective):
-		
+	def extrude(self, de):
+
+		# print("before", self.__editableVertices)
+
+		for i in range(len(self.__editableVertices)):
+
+			self.__editableVertices[i][2] = max(self.__editableVertices[i][2] + de, BSP_DEPTH)
+
+			# if self.__editableVertices[i][2] > -BSP_DEPTH:
+			# 	self.__editableVertices[i][2] = -BSP_DEPTH
+
+		# print("after", self.__editableVertices)
+
+	def draw(self, perspective, selectMode=False, names=[]):
+
 		if self.__left != None:
-			self.__left.draw(perspective)
+			self.__left.draw(perspective, selectMode, names)
 
 		if self.__right != None:
-			self.__right.draw(perspective)
+			self.__right.draw(perspective, selectMode, names)
 
 		if (self.__left == None) and (self.__right == None):
 
-			if perspective:
+			if perspective or selectMode:
 
 				# glEnable(GL_LIGHTING)
 				# glEnable(GL_COLOR_MATERIAL)
@@ -208,6 +221,11 @@ class Node(object):
 				glEnable(GL_DEPTH_TEST)
 
 				glColor(self.__color[0], self.__color[1], self.__color[2])
+
+				if selectMode:
+					glLoadName(len(names) + 1)
+
+					names.append(self)
 
 				# Borders
 				glBegin(GL_QUAD_STRIP)
@@ -275,6 +293,15 @@ class Tree(object):
 
 	def checkCollison(self, p1, p2):
 		return self.__root.checkCollison(p1, p2)
+
+	def drawPicking(self):
+
+		names = []
+
+		self.__root.draw(perspective, selectMode=True, names=names)
+
+		return names
+
 
 # ############################################
 # ############# Utiliry classes ##############
@@ -426,6 +453,18 @@ class PerspectiveCamera(object):
 		self.__direction = Vector(*self.__initialDirection)
 		self.__up = Vector(*self.__initialUp)
 
+	@property
+	def position(self):
+		return self.__position
+
+	@property
+	def center(self):
+		return (self.__position + self.__direction)
+
+	@property
+	def up(self):
+		return self.__up
+
 	def move(self, dx, dy):
 
 		radius = self.__direction.magnitude
@@ -489,6 +528,46 @@ def applyCurrentMatrix():
 		glLoadMatrixd(orthoMatrix)
 		# return orthoMatrix
 
+def pickElements(point):
+
+	selectBuffer = glSelectBuffer(100)
+
+	viewport = glGetIntegerv(GL_VIEWPORT)
+
+	glRenderMode(GL_SELECT)
+	glInitNames()
+	glPushName(0)
+
+	glMatrixMode(GL_PROJECTION)
+	glPushMatrix()
+	glLoadIdentity()
+
+	
+
+	gluPickMatrix(point[0], HEIGHT - point[1], 5.0, 5.0, viewport)
+
+	# gluOrtho2D(0.0, 1.0, 0.0, 1.0)
+
+	# gluLookAt(*camera.position, *camera.center, *camera.up)
+
+	# gluLookAt(*camera.position, *camera.center, *camera.up)
+	# glOrtho(0.0, 1.0, 0.0, 1.0, -0.5, 0.5)
+	gluPerspective(40.0, WIDTH / HEIGHT, 0.01, 10.0)
+
+	names = tree.drawPicking()
+	# names = tree.drawPicking(point)
+
+	# glMatrixMode(GL_PROJECTION)
+	glPopMatrix()
+
+	glRenderMode(GL_RENDER)
+
+	# Process picking
+	if selectBuffer[0] > 0:
+		return names[ selectBuffer[3] - 1 ]
+
+		# print(names[ selectBuffer[3] - 1 ].__color)
+
 # ############################################
 # ############ Global variables ##############
 # ############################################
@@ -511,8 +590,6 @@ perspectiveMatrix = None
 perspective = False
 
 camera = None
-
-
 
 # ############################################
 # ############ OpenGL callbacks ##############
@@ -548,6 +625,25 @@ def mouseDragged(x, y):
 	# print(convertWindowToOpenGL((x, y)))
 	# glutWarpPointer(0, 0)
 
+def specialKeyPressed(key, x, y):
+
+	global perspective
+
+	if perspective:
+
+		if (key == GLUT_KEY_UP) or (key == GLUT_KEY_DOWN):
+			el = pickElements((x, y))
+
+			if el != None:
+
+				print('abcde')
+
+				if key == GLUT_KEY_UP:
+					el.extrude(0.1)
+				else:
+					el.extrude(-0.1)
+
+
 def keyPressed(key, x, y):
 
 	global perspective
@@ -570,6 +666,11 @@ def keyPressed(key, x, y):
 	elif key == b'r':
 		if perspective:
 			camera.reset()
+
+	# ESC key
+	elif key == b'\x1b':
+		glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION)
+		glutLeaveMainLoop()
 
 def draw():
 
@@ -674,6 +775,7 @@ def main():
 	glutMouseFunc(mousePressedOrReleased)
 	glutMotionFunc(mouseDragged)
 	glutKeyboardFunc(keyPressed)
+	glutSpecialFunc(specialKeyPressed)
 	glutMainLoop()
 
 
