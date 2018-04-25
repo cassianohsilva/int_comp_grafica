@@ -8,6 +8,8 @@ from random import uniform
 from numbers import Number
 from math import sqrt, sin, cos
 
+import traceback
+
 # ############################################
 # ############# Data structures ##############
 # ############################################
@@ -202,6 +204,57 @@ class Node(object):
 
 		# print("after", self.__editableVertices)
 
+	def __draw3D(self, selectMode, names):
+		# glEnable(GL_LIGHTING)
+		# glEnable(GL_COLOR_MATERIAL)
+		# glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE)
+
+		glEnable(GL_DEPTH_TEST)
+
+		if selectMode:
+
+			names.append(self)
+
+			l = len(names)
+
+			r = l // 65025
+			g = (l % 65025) // 255
+			b = l % 255
+
+			glColor3ub(r, g, b)
+
+		else:
+			glColor(self.__color[0], self.__color[1], self.__color[2])
+
+		# Borders
+		glBegin(GL_QUAD_STRIP)
+
+		for v in range(len(self.__vertices) + 1):
+
+			i = (v + 1) % len(self.__vertices)
+
+			glVertex(self.__vertices[i][0], self.__vertices[i][1], self.__vertices[i][2])
+			glVertex(self.__editableVertices[i][0], self.__editableVertices[i][1], self.__editableVertices[i][2])
+			# glVertex(self.__vertices[nextI][0], self.__vertices[nextI][1], self.__vertices[nextI][2])
+			# glVertex(self.__editableVertices[nextI][0], self.__editableVertices[nextI][1], self.__editableVertices[nextI][2])
+
+		glEnd()
+
+		# glDisable(GL_LIGHTING)
+
+		# Front and back face
+		# Back face has inversed vertices orientations
+		for p in (self.__vertices, self.__editableVertices[::-1]):
+
+			glBegin(GL_POLYGON)
+
+			for v in p:
+				glVertex(v[0], v[1], v[2])
+
+			glEnd()
+
+		glDisable(GL_DEPTH_TEST)
+
 	def draw(self, perspective, selectMode=False, names=[]):
 
 		if self.__left != None:
@@ -214,47 +267,7 @@ class Node(object):
 
 			if perspective or selectMode:
 
-				# glEnable(GL_LIGHTING)
-				# glEnable(GL_COLOR_MATERIAL)
-				# glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE)
-
-				glEnable(GL_DEPTH_TEST)
-
-				glColor(self.__color[0], self.__color[1], self.__color[2])
-
-				if selectMode:
-					glLoadName(len(names) + 1)
-
-					names.append(self)
-
-				# Borders
-				glBegin(GL_QUAD_STRIP)
-
-				for v in range(len(self.__vertices) + 1):
-
-					i = (v + 1) % len(self.__vertices)
-
-					glVertex(self.__vertices[i][0], self.__vertices[i][1], self.__vertices[i][2])
-					glVertex(self.__editableVertices[i][0], self.__editableVertices[i][1], self.__editableVertices[i][2])
-					# glVertex(self.__vertices[nextI][0], self.__vertices[nextI][1], self.__vertices[nextI][2])
-					# glVertex(self.__editableVertices[nextI][0], self.__editableVertices[nextI][1], self.__editableVertices[nextI][2])
-
-				glEnd()
-
-				# glDisable(GL_LIGHTING)
-
-				# Front and back face
-				# Back face has inversed vertices orientations
-				for p in (self.__vertices, self.__editableVertices[::-1]):
-
-					glBegin(GL_POLYGON)
-
-					for v in p:
-						glVertex(v[0], v[1], v[2])
-
-					glEnd()
-
-				glDisable(GL_DEPTH_TEST)
+				self.__draw3D(selectMode, names)
 
 			else:
 
@@ -278,7 +291,6 @@ class Node(object):
 
 class Tree(object):
 
-	# def __init__(self, width, height):
 	def __init__(self):
 		super(Tree, self).__init__()
 		# self.__root = Node([(0, 0), (width, 0), (width, height), (0, height)], None)
@@ -296,12 +308,26 @@ class Tree(object):
 
 	def drawPicking(self):
 
+		global fboSelection, texSelection
+
 		names = []
+
+		glEnable(GL_TEXTURE_2D)
+
+		glBindFramebuffer(GL_FRAMEBUFFER, fboSelection)
+		glBindTexture(GL_TEXTURE_2D, texSelection)
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, None)
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texSelection, 0)
+
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
 		self.__root.draw(perspective, selectMode=True, names=names)
 
-		return names
+		glBindFramebuffer(GL_FRAMEBUFFER, 0)
+		glBindTexture(GL_TEXTURE_2D, 0)
+		glDisable(GL_TEXTURE_2D)
 
+		return names
 
 # ############################################
 # ############# Utiliry classes ##############
@@ -486,7 +512,6 @@ class PerspectiveCamera(object):
 
 		self.__up = up
 
-
 # ############################################
 # ############ Utility functions #############
 # ############################################
@@ -530,43 +555,22 @@ def applyCurrentMatrix():
 
 def pickElements(point):
 
-	selectBuffer = glSelectBuffer(100)
-
-	viewport = glGetIntegerv(GL_VIEWPORT)
-
-	glRenderMode(GL_SELECT)
-	glInitNames()
-	glPushName(0)
-
-	glMatrixMode(GL_PROJECTION)
-	glPushMatrix()
-	glLoadIdentity()
-
-	
-
-	gluPickMatrix(point[0], HEIGHT - point[1], 5.0, 5.0, viewport)
-
-	# gluOrtho2D(0.0, 1.0, 0.0, 1.0)
-
-	# gluLookAt(*camera.position, *camera.center, *camera.up)
-
-	# gluLookAt(*camera.position, *camera.center, *camera.up)
-	# glOrtho(0.0, 1.0, 0.0, 1.0, -0.5, 0.5)
-	gluPerspective(40.0, WIDTH / HEIGHT, 0.01, 10.0)
+	global fboSelection
 
 	names = tree.drawPicking()
-	# names = tree.drawPicking(point)
+	
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, fboSelection)
+	glReadBuffer(GL_COLOR_ATTACHMENT0)
 
-	# glMatrixMode(GL_PROJECTION)
-	glPopMatrix()
+	pixels = glReadPixels(point[0], HEIGHT - point[1], 1, 1, GL_RGB, GL_UNSIGNED_BYTE)
 
-	glRenderMode(GL_RENDER)
+	glReadBuffer(GL_NONE)
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0)
 
-	# Process picking
-	if selectBuffer[0] > 0:
-		return names[ selectBuffer[3] - 1 ]
+	# R + G + B
+	index = (pixels[0] * 65025) + (pixels[1] * 255) + (pixels[2] - 1)
 
-		# print(names[ selectBuffer[3] - 1 ].__color)
+	return names[index] if index >= 0 else None
 
 # ############################################
 # ############ Global variables ##############
@@ -591,6 +595,9 @@ perspective = False
 
 camera = None
 
+fboSelection = None
+texSelection = None
+
 # ############################################
 # ############ OpenGL callbacks ##############
 # ############################################
@@ -612,7 +619,6 @@ def mousePressedOrReleased(button, state, x, y):
 			startPoint = None
 			endPoint = None
 			collisionEdge = None
-
 
 def mouseDragged(x, y):
 
@@ -636,13 +642,10 @@ def specialKeyPressed(key, x, y):
 
 			if el != None:
 
-				print('abcde')
-
 				if key == GLUT_KEY_UP:
-					el.extrude(0.1)
+					el.extrude(0.025)
 				else:
-					el.extrude(-0.1)
-
+					el.extrude(-0.025)
 
 def keyPressed(key, x, y):
 
@@ -709,10 +712,9 @@ def draw():
 
 	glutSwapBuffers()
 
-
 def setup():
 
-	global window, perspectiveMatrix, orthoMatrix, camera
+	global window, perspectiveMatrix, orthoMatrix, camera, fboSelection, texSelection
 
 	glutInit()
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH)
@@ -756,6 +758,9 @@ def setup():
 	glLightfv(GL_LIGHT0, GL_POSITION, [1.0, 1.0, -4.0, 1.0])
 
 	glDisable(GL_LIGHTING)
+
+	fboSelection = glGenFramebuffers(1)
+	texSelection = glGenTextures(1)
 
 	# #####################################################################
 
