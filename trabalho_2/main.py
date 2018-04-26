@@ -308,14 +308,20 @@ class Tree(object):
 
 	def drawPicking(self):
 
-		global fboSelection, texSelection
+		global fboSelection, texSelection, depthSelection
 
 		names = []
 
 		glEnable(GL_TEXTURE_2D)
 
-		glBindFramebuffer(GL_FRAMEBUFFER, fboSelection)
+		# Attach buffers and texture
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboSelection)
 		glBindTexture(GL_TEXTURE_2D, texSelection)
+		glBindRenderbuffer(GL_RENDERBUFFER, depthSelection)
+
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WIDTH, HEIGHT)
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthSelection)
+
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, None)
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texSelection, 0)
 
@@ -323,7 +329,8 @@ class Tree(object):
 
 		self.__root.draw(perspective, selectMode=True, names=names)
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0)
+		glBindRenderbuffer(GL_RENDERBUFFER, 0)
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0)
 		glBindTexture(GL_TEXTURE_2D, 0)
 		glDisable(GL_TEXTURE_2D)
 
@@ -597,6 +604,7 @@ camera = None
 
 fboSelection = None
 texSelection = None
+depthSelection = None
 
 # ############################################
 # ############ OpenGL callbacks ##############
@@ -714,7 +722,7 @@ def draw():
 
 def setup():
 
-	global window, perspectiveMatrix, orthoMatrix, camera, fboSelection, texSelection
+	global window, perspectiveMatrix, orthoMatrix, camera, fboSelection, texSelection, depthSelection
 
 	glutInit()
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH)
@@ -761,6 +769,7 @@ def setup():
 
 	fboSelection = glGenFramebuffers(1)
 	texSelection = glGenTextures(1)
+	depthSelection = glGenRenderbuffers(1)
 
 	# #####################################################################
 
