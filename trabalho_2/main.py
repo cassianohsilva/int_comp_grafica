@@ -20,7 +20,7 @@ class Node(object):
 
 		self.__color = color if ( (color != None) and (len(color) == 3) ) else randColor()
 		self.__vertices = [ (v[0], v[1], 0) for v in vertices ]
-		self.__editableVertices = [ [v[0], v[1], BSP_DEPTH] for v in vertices ]
+		self.__editableVertices = [ [v[0], v[1], BSP_DEPTH] for v in vertices ] if editableVertices == None else editableVertices
 		self.__equation = None
 		self.__intersectionPoints = None
 
@@ -90,13 +90,18 @@ class Node(object):
 
 			self.__equation = lambda x, y : a*x + b*y + c
 
-			new_vertices = [ [], [] ]
+			newVertices = [ [], [] ]
+			newEditableVertices = [ [], [] ]
+
 			intersectionPoints = []
 
 			for i in range(len(self.__vertices)):
 
 				v1 = self.__vertices[i]
 				v2 = self.__vertices[(i + 1) % len(self.__vertices)]
+
+				ev1 = self.__editableVertices[i]
+				ev2 = self.__editableVertices[(i + 1) % len(self.__vertices)]
 
 				# Vector between first mouse point and first bound vertex
 				pq = Vector(p1[0] - v1[0], p1[1] - v1[1])
@@ -124,23 +129,44 @@ class Node(object):
 						if (t >= 0) and (t <= 1):
 							intersection = ( v1[0] + t*r.x, v1[1] + t*r.y )
 
-
 					side = self.__equation(v1[0], v1[1])
 
 					if side < 0:
-						new_vertices[0].append(v1)
+						newVertices[0].append(v1)
+						newEditableVertices[0].append(ev1)
 
 					elif side > 0:
-						new_vertices[1].append(v1)
+						newVertices[1].append(v1)
+						newEditableVertices[1].append(ev1)
 
 					else:
-						new_vertices[0].append(v1)
-						new_vertices[1].append(v1)
+						newVertices[0].append(v1)
+						newVertices[1].append(v1)
+
+						newEditableVertices[0].append(ev1)
+						# Duplicate the reference
+						newEditableVertices[1].append(ev1[:])
 
 
 					if (intersection != None) and (intersection != v1) and (intersection != v2):
-						new_vertices[0].append(intersection)
-						new_vertices[1].append(intersection)
+
+						# Compute editable intersection from (x, y) of the base intersection
+						er = ( ev2[0] - ev1[0], ev2[1] - ev1[1], ev2[2] - ev1[2] )
+						t = 0
+
+						if er[0] != 0:
+							t = (intersection[0] - ev1[0]) / er[0]
+						else:
+							t = (intersection[1] - ev1[1]) / er[1]
+
+						eiv = [intersection[0], intersection[1], ev1[2] + t * er[2]]
+
+						newVertices[0].append(intersection)
+						newVertices[1].append(intersection)
+
+						newEditableVertices[0].append(eiv)
+						# Duplicate the reference
+						newEditableVertices[1].append(eiv[:])
 
 						intersectionPoints.append(intersection)
 
@@ -148,8 +174,8 @@ class Node(object):
 
 				pass
 
-			self.__left = Node(new_vertices[0], self.__color)
-			self.__right = Node(new_vertices[1])
+			self.__left = Node(newVertices[0], self.__color, editableVertices=newEditableVertices[0])
+			self.__right = Node(newVertices[1], editableVertices=newEditableVertices[1])
 
 			self.__intersectionPoints = intersectionPoints
 
