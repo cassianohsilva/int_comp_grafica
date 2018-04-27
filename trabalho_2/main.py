@@ -685,27 +685,29 @@ def keyPressed(key, x, y):
 
 	global perspective
 
-	if key == b'o':
+	key = key.decode().lower()
+
+	if key == 'o':
 		perspective = not perspective
 
-	elif key == b'd':
+	elif key == 'd':
 		camera.move(0.05, 0)
 
-	elif key == b'a':
+	elif key == 'a':
 		camera.move(-0.05, 0)
 
-	elif key == b'w':
+	elif key == 'w':
 		camera.move(0, 0.05)
 
-	elif key == b's':
+	elif key == 's':
 		camera.move(0, -0.05)
 
-	elif key == b'r':
+	elif key == 'r':
 		if perspective:
 			camera.reset()
 
 	# ESC key
-	elif key == b'\x1b':
+	elif key == '\x1b':
 		glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION)
 		glutLeaveMainLoop()
 
