@@ -524,7 +524,7 @@ class PerspectiveCamera(object):
 	def up(self):
 		return self.__up
 
-	def move(self, dx, dy):
+	def rotate(self, dx, dy):
 
 		radius = self.__direction.magnitude
 
@@ -643,7 +643,8 @@ def mousePressedOrReleased(button, state, x, y):
 	if button == GLUT_LEFT_BUTTON:
 
 		if state == GLUT_DOWN:
-			startPoint = (clamp(x, WIDTH), clamp(y, HEIGHT))
+			startPoint = [clamp(x, WIDTH), clamp(y, HEIGHT)]
+			endPoint = [clamp(x, WIDTH), clamp(y, HEIGHT)]
 
 		else:
 
@@ -659,10 +660,14 @@ def mouseDragged(x, y):
 	global startPoint, endPoint, collisionEdge
 
 	if startPoint != None:
-		endPoint = (clamp(x, WIDTH), clamp(y, HEIGHT))
 
-		# collisionEdge = tree.checkCollison(convertWindowToOpenGL(startPoint), convertWindowToOpenGL(endPoint))
-	# print(convertWindowToOpenGL((x, y)))
+		factor = 7.5
+
+		if perspective:
+			camera.rotate( (endPoint[0] - clamp(x, WIDTH)) * factor / WIDTH, (clamp(y, HEIGHT) - endPoint[1]) * factor / HEIGHT)
+
+		endPoint[0], endPoint[1] = clamp(x, WIDTH), clamp(y, HEIGHT)
+
 	# glutWarpPointer(0, 0)
 
 def specialKeyPressed(key, x, y):
@@ -689,18 +694,6 @@ def keyPressed(key, x, y):
 
 	if key == 'o':
 		perspective = not perspective
-
-	elif key == 'd':
-		camera.move(0.05, 0)
-
-	elif key == 'a':
-		camera.move(-0.05, 0)
-
-	elif key == 'w':
-		camera.move(0, 0.05)
-
-	elif key == 's':
-		camera.move(0, -0.05)
 
 	elif key == 'r':
 		if perspective:
