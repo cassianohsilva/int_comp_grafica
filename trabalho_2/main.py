@@ -632,19 +632,24 @@ fboSelection = None
 texSelection = None
 depthSelection = None
 
+extrusionObject = None
+
 # ############################################
 # ############ OpenGL callbacks ##############
 # ############################################
 
 def mousePressedOrReleased(button, state, x, y):
 
-	global startPoint, endPoint, collisionEdge
+	global startPoint, endPoint, collisionEdge, extrusionObject
 
 	if button == GLUT_LEFT_BUTTON:
 
 		if state == GLUT_DOWN:
 			startPoint = [clamp(x, WIDTH), clamp(y, HEIGHT)]
 			endPoint = [clamp(x, WIDTH), clamp(y, HEIGHT)]
+
+			if perspective:
+				extrusionObject = pickElements((x, y))
 
 		else:
 
@@ -654,6 +659,7 @@ def mousePressedOrReleased(button, state, x, y):
 			startPoint = None
 			endPoint = None
 			collisionEdge = None
+			extrusionObject = None
 
 def mouseDragged(x, y):
 
@@ -664,7 +670,13 @@ def mouseDragged(x, y):
 		factor = 7.5
 
 		if perspective:
-			camera.rotate( (endPoint[0] - clamp(x, WIDTH)) * factor / WIDTH, (clamp(y, HEIGHT) - endPoint[1]) * factor / HEIGHT)
+			if not extrusionObject:
+				camera.rotate( (endPoint[0] - clamp(x, WIDTH)) * factor / WIDTH, (clamp(y, HEIGHT) - endPoint[1]) * factor / HEIGHT)
+			else:
+				dz = tuple(map(float.__sub__, gluUnProject(endPoint[0], endPoint[1], 0.0), gluUnProject(x, y, 0.0) ))[2]
+
+				# TODO Check this constant
+				extrusionObject.extrude(dz * 2)
 
 		endPoint[0], endPoint[1] = clamp(x, WIDTH), clamp(y, HEIGHT)
 
@@ -672,19 +684,20 @@ def mouseDragged(x, y):
 
 def specialKeyPressed(key, x, y):
 
-	global perspective
+	# global perspective
 
-	if perspective:
+	# if perspective:
 
-		if (key == GLUT_KEY_UP) or (key == GLUT_KEY_DOWN):
-			el = pickElements((x, y))
+	# 	if (key == GLUT_KEY_UP) or (key == GLUT_KEY_DOWN):
+	# 		el = pickElements((x, y))
 
-			if el != None:
+	# 		if el != None:
 
-				if key == GLUT_KEY_UP:
-					el.extrude(0.025)
-				else:
-					el.extrude(-0.025)
+	# 			if key == GLUT_KEY_UP:
+	# 				el.extrude(0.025)
+	# 			else:
+	# 				el.extrude(-0.025)
+	pass
 
 def keyPressed(key, x, y):
 
