@@ -331,18 +331,25 @@ class Tree(object):
 
 	BSP_MIN_DEPTH = 0.1
 
-	def __init__(self, width, height):
+	# def __init__(self, width, height):
+	def __init__(self, dimension):
 
 		super(Tree, self).__init__()
 		# self.__root = Node([(0, 0), (width, 0), (width, height), (0, height)], None)
 		# self.__root = Node([(0, 0), (0, 1), (1, 1), (1, 0)], None)
 		self.__root = Node([(0, 0), (0, 1), (1, 1), (1, 0)], None)
-		self.__width = width
-		self.__height = height
+		# self.__dimension[0] = width
+		# self.__dimension[1] = height
 
-		self.fboSelection = glGenFramebuffers(1)
-		self.texSelection = glGenTextures(1)
-		self.depthSelection = glGenRenderbuffers(1)
+		self.__dimension = dimension
+
+		self.__fboSelection = glGenFramebuffers(1)
+		self.__texSelection = glGenTextures(1)
+		self.__depthSelection = glGenRenderbuffers(1)
+
+	@property
+	def fbo(self):
+		return self.__fboSelection
 
 	def draw(self, perspective=False):
 		self.__root.draw(perspective)
@@ -362,15 +369,15 @@ class Tree(object):
 		glEnable(GL_TEXTURE_2D)
 
 		# Attach buffers and texture
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, self.fboSelection)
-		glBindTexture(GL_TEXTURE_2D, self.texSelection)
-		glBindRenderbuffer(GL_RENDERBUFFER, self.depthSelection)
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, self.__fboSelection)
+		glBindTexture(GL_TEXTURE_2D, self.__texSelection)
+		glBindRenderbuffer(GL_RENDERBUFFER, self.__depthSelection)
 
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, self.__width, self.__height)
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, self.depthSelection)
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, self.__dimension[0], self.__dimension[1])
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, self.__depthSelection)
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, self.__width, self.__height, 0, GL_RGB, GL_UNSIGNED_BYTE, None)
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, self.texSelection, 0)
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, self.__dimension[0], self.__dimension[1], 0, GL_RGB, GL_UNSIGNED_BYTE, None)
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, self.__texSelection, 0)
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 

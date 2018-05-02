@@ -5,14 +5,14 @@ from vector import Vector
 
 class PerspectiveCamera(object):
 
-	def __init__(self, position, direction, up, width, height):
+	# def __init__(self, position, direction, up, width, height):
+	def __init__(self, position, direction, up, dimension):
 		super(PerspectiveCamera, self).__init__()
 		self.__position = Vector(*position)
 		self.__direction = Vector(*direction)
 		self.__up = Vector(*up)
 
-		self.__width = width
-		self.__height = height
+		self.__dimension = dimension
 
 		# Copy passed parameters
 		self.__initialPosition = position
@@ -23,7 +23,7 @@ class PerspectiveCamera(object):
 		glMatrixMode(GL_PROJECTION)
 		glLoadIdentity()
 
-		gluPerspective(40.0, self.__width / self.__height, 1.0, 10.0)
+		gluPerspective(40.0, self.__dimension[0] / self.__dimension[1], 1.0, 10.0)
 
 		gluLookAt(*self.__position, *(self.__position + self.__direction), *self.__up)
 
