@@ -139,10 +139,6 @@ class Window(object):
 
 				glEnd()
 
-		else:
-			# 3D view
-			pass
-
 		glutSwapBuffers()
 
 	def mouseDragged(self, x, y):
@@ -152,19 +148,14 @@ class Window(object):
 			factor = 7.5
 
 			if self.__perspective:
-				if not self.__selectedObject:
-					self.__camera.rotate(
-								(self.__endPoint[0] - clamp(x, self.__dimension[0])) * factor / self.__dimension[0],
-								(clamp(y, self.__dimension[1]) - self.__endPoint[1]) * factor / self.__dimension[1])
-				else:
-					dz = tuple(map(float.__sub__, gluUnProject(self.__endPoint[0], self.__endPoint[1], 0.0), gluUnProject(x, y, 0.0) ))[2]
 
-					# TODO Check this constant
-					self.__selectedObject.extrude(dz * 2)
+				self.__camera.rotate(
+							(self.__endPoint[0] - clamp(x, self.__dimension[0])) * factor / self.__dimension[0],
+							(clamp(y, self.__dimension[1]) - self.__endPoint[1]) * factor / self.__dimension[1])
 
 			self.__endPoint[0], self.__endPoint[1] = clamp(x, self.__dimension[0]), clamp(y, self.__dimension[1])
 
-	def mousePressedOrReleased(self, button, state, x, y):
+	def mouseButton(self, button, state, x, y):
 
 		if button == GLUT_LEFT_BUTTON:
 
@@ -184,3 +175,16 @@ class Window(object):
 				self.__endPoint = None
 				self.__collisionEdge = None
 				self.__selectedObject = None
+
+		# Mouse wheel
+		elif (button == 3) or (button == 4):
+
+			if self.__perspective:
+
+				self.__selectedObject = self.pickElements((x, y))
+
+				if self.__selectedObject:
+					if button == 3:
+						self.__selectedObject.extrude(0.025)
+					else:
+						self.__selectedObject.extrude(-0.025)

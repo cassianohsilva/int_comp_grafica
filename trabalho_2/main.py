@@ -15,12 +15,10 @@ def main(argv):
 	glutDisplayFunc(window.draw)
 	glutIdleFunc(window.draw)
 	glutReshapeFunc(window.resize)
-	glutMouseFunc(window.mousePressedOrReleased)
+	glutMouseFunc(window.mouseButton)
 	glutMotionFunc(window.mouseDragged)
-	# glutKeyboardFunc(keyPressed)
 	glutKeyboardFunc(window.keyPressed)
 	glutSpecialFunc(window.specialKeyPressed)
-	# glutMainLoop()
 
 	glutMainLoop()
 
