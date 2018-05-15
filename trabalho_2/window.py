@@ -111,7 +111,7 @@ class Window(object):
 		# R + G + B
 		index = (pixels[0] * 65025) + (pixels[1] * 255) + (pixels[2] - 1)
 
-		return names[index] if index >= 0 else None
+		return names[index] if (index >= 0 and index < len(names)) else None
 
 	def draw(self):
 
