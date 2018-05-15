@@ -30,12 +30,27 @@ class Node(object):
 
 		self.__color = color if ( (color != None) and (len(color) == 3) ) else randColor()
 		self.__vertices = [ (v[0], v[1], 0) for v in vertices ]
+		self.__sideNormals = self.__computeNormals()
 		self.__editableVertices = [ [v[0], v[1], Tree.BSP_MIN_DEPTH] for v in vertices ] if editableVertices == None else editableVertices
 		self.__equation = None
 		self.__intersectionPoints = None
 
 		self.__left = None
 		self.__right = None
+
+	def __computeNormals(self):
+
+		temp = [ Vector(*v) for v in self.__vertices ]
+		normals = [ None for i in range(len(temp)) ]
+
+		for i in range(len(temp)):
+
+			v = temp[(i + 1) % len(temp)] - temp[i]
+			n = Vector(v[1], -v[0], v[2])
+
+			normals[i] = tuple(n)
+
+		return normals
 
 	def hasChildren(self):
 		return not ((self.__equation == None) or (self.__left == None) or (self.__right == None))
@@ -184,7 +199,7 @@ class Node(object):
 
 				pass
 
-			self.__left = Node(newVertices[0], self.__color, editableVertices=newEditableVertices[0])
+			self.__left = Node(newVertices[0], color=self.__color, editableVertices=newEditableVertices[0])
 			self.__right = Node(newVertices[1], editableVertices=newEditableVertices[1])
 
 			self.__intersectionPoints = intersectionPoints
@@ -243,9 +258,6 @@ class Node(object):
 		# print("after", self.__editableVertices)
 
 	def __draw3D(self, selectMode, names):
-		# glEnable(GL_LIGHTING)
-		# glEnable(GL_COLOR_MATERIAL)
-		# glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE)
 
 		glEnable(GL_DEPTH_TEST)
 
@@ -262,36 +274,64 @@ class Node(object):
 			glColor3ub(r, g, b)
 
 		else:
+			glEnable(GL_LIGHTING)
+			glEnable(GL_COLOR_MATERIAL)
+			glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE)
+
 			glColor(self.__color[0], self.__color[1], self.__color[2])
 
 		# Borders
-		glBegin(GL_QUAD_STRIP)
+		glBegin(GL_QUADS)
 
-		for v in range(len(self.__vertices) + 1):
+		for v in range(len(self.__vertices)):
 
 			i = (v + 1) % len(self.__vertices)
 
-			glVertex(self.__vertices[i][0], self.__vertices[i][1], self.__vertices[i][2])
-			glVertex(self.__editableVertices[i][0], self.__editableVertices[i][1], self.__editableVertices[i][2])
-			# glVertex(self.__vertices[nextI][0], self.__vertices[nextI][1], self.__vertices[nextI][2])
-			# glVertex(self.__editableVertices[nextI][0], self.__editableVertices[nextI][1], self.__editableVertices[nextI][2])
+			glNormal(*self.__sideNormals[v])
+
+			glVertex(*self.__vertices[v])
+			glVertex(*self.__editableVertices[v])
+
+			glVertex(*self.__editableVertices[i])
+			glVertex(*self.__vertices[i])
 
 		glEnd()
+		# glBegin(GL_QUAD_STRIP)
+
+		# for v in range(len(self.__vertices) + 1):
+
+		# 	i = (v + 1) % len(self.__vertices)
+
+		# 	glVertex(self.__vertices[i][0], self.__vertices[i][1], self.__vertices[i][2])
+		# 	glVertex(self.__editableVertices[i][0], self.__editableVertices[i][1], self.__editableVertices[i][2])
+		# 	# glVertex(self.__vertices[nextI][0], self.__vertices[nextI][1], self.__vertices[nextI][2])
+		# 	# glVertex(self.__editableVertices[nextI][0], self.__editableVertices[nextI][1], self.__editableVertices[nextI][2])
+
+		# glEnd()
 
 		# glDisable(GL_LIGHTING)
 
-		# Front and back face
+		# Front face
+		glNormal(0, 0, 1)
+		glBegin(GL_POLYGON)
+
+		for v in self.__vertices:
+			glVertex(v[0], v[1], v[2])
+
+		glEnd()
+
+		# Back face
+		glNormal(0, 0, -1)
+		glBegin(GL_POLYGON)
+
 		# Back face has inversed vertices orientations
-		for p in (self.__vertices, self.__editableVertices[::-1]):
+		for v in self.__editableVertices[::-1]:
+			glVertex(v[0], v[1], v[2])
 
-			glBegin(GL_POLYGON)
-
-			for v in p:
-				glVertex(v[0], v[1], v[2])
-
-			glEnd()
+		glEnd()
 
 		glDisable(GL_DEPTH_TEST)
+		glDisable(GL_LIGHTING)
 
 	def draw(self, perspective, selectMode=False, names=[]):
 
@@ -337,6 +377,7 @@ class Tree(object):
 		super(Tree, self).__init__()
 		# self.__root = Node([(0, 0), (width, 0), (width, height), (0, height)], None)
 		# self.__root = Node([(0, 0), (0, 1), (1, 1), (1, 0)], None)
+		# self.__root = Node([(0, 0), (0, 1), (1, 1), (1, 0)], [(-1, 0), (0, 1), (1, 0), (0, -1)], None)
 		self.__root = Node([(0, 0), (0, 1), (1, 1), (1, 0)], None)
 		# self.__dimension[0] = width
 		# self.__dimension[1] = height
