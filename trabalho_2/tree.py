@@ -2,27 +2,9 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 from vector import Vector
-from random import uniform
+from utils import *
 
-def randColor():
-	# Not too black or too white
-	return (uniform(0.1, 0.9), uniform(0.1, 0.9), uniform(0.1, 0.9))
 
-def clamp(val, vmax, vmin=0):
-	return max(vmin, min(val, vmax))
-
-def signal(v):
-
-	if v > 0:
-		return 1
-	elif v < 0:
-		return -1
-	else:
-		return 0
-
-# ############################################
-# ############# Data structures ##############
-# ############################################
 class Node(object):
 
 	def __init__(self, vertices, color=None, editableVertices=None):
@@ -38,16 +20,19 @@ class Node(object):
 		self.__left = None
 		self.__right = None
 
+
 	@property
 	def depth(self):
 
 		return self.__editableVertices[0][2]
+
 
 	@depth.setter
 	def depth(self, d):
 
 		for ev in self.__editableVertices:
 			ev[2] = d
+
 
 	def __computeNormals(self):
 
@@ -63,8 +48,10 @@ class Node(object):
 
 		return normals
 
+
 	def hasChildren(self):
 		return not ((self.__equation == None) or (self.__left == None) or (self.__right == None))
+
 
 	"""
 		Subdivide or merge node elements
@@ -221,6 +208,7 @@ class Node(object):
 			pass
 		pass
 
+
 	"""
 		Check if the line segment between p1 and p2 collide with some edge
 	"""
@@ -256,20 +244,14 @@ class Node(object):
 		else:
 			return None
 
-	def extrude(self, de):
 
-		# print("before", self.__editableVertices)
+	def extrude(self, de):
 
 		for i in range(len(self.__editableVertices)):
 
 
 			self.__editableVertices[i][2] = max(self.__editableVertices[i][2] + de, Tree.BSP_MIN_DEPTH)
 
-
-			# if self.__editableVertices[i][2] > -BSP_MIN_DEPTH:
-			# 	self.__editableVertices[i][2] = -BSP_MIN_DEPTH
-
-		# print("after", self.__editableVertices)
 
 	def __draw3D(self, selectMode, names):
 
@@ -310,20 +292,6 @@ class Node(object):
 			glVertex(*self.__vertices[i])
 
 		glEnd()
-		# glBegin(GL_QUAD_STRIP)
-
-		# for v in range(len(self.__vertices) + 1):
-
-		# 	i = (v + 1) % len(self.__vertices)
-
-		# 	glVertex(self.__vertices[i][0], self.__vertices[i][1], self.__vertices[i][2])
-		# 	glVertex(self.__editableVertices[i][0], self.__editableVertices[i][1], self.__editableVertices[i][2])
-		# 	# glVertex(self.__vertices[nextI][0], self.__vertices[nextI][1], self.__vertices[nextI][2])
-		# 	# glVertex(self.__editableVertices[nextI][0], self.__editableVertices[nextI][1], self.__editableVertices[nextI][2])
-
-		# glEnd()
-
-		# glDisable(GL_LIGHTING)
 
 		# Front face
 		glNormal(0, 0, 1)
@@ -346,6 +314,7 @@ class Node(object):
 
 		glDisable(GL_DEPTH_TEST)
 		glDisable(GL_LIGHTING)
+
 
 	def draw(self, perspective, selectMode=False, names=[]):
 
@@ -381,43 +350,47 @@ class Node(object):
 					glVertex(p[0], p[1], p[2])
 				glEnd()
 
+
 class Tree(object):
 
 	BSP_MIN_DEPTH = 0.1
 
-	# def __init__(self, width, height):
 	def __init__(self, dimension):
 
 		super(Tree, self).__init__()
-		# self.__root = Node([(0, 0), (width, 0), (width, height), (0, height)], None)
-		# self.__root = Node([(0, 0), (0, 1), (1, 1), (1, 0)], None)
-		# self.__root = Node([(0, 0), (0, 1), (1, 1), (1, 0)], [(-1, 0), (0, 1), (1, 0), (0, -1)], None)
 		self.__root = Node([(0, 0), (0, 1), (1, 1), (1, 0)], None)
-		# self.__dimension[0] = width
-		# self.__dimension[1] = height
 
+		# Passed for reference because of window redimensions
 		self.__dimension = dimension
 
+		# Framebuffer
 		self.__fboSelection = glGenFramebuffers(1)
+
+		# Texture for framebuffer
 		self.__texSelection = glGenTextures(1)
+
+		# Depth buffer
 		self.__depthSelection = glGenRenderbuffers(1)
+
 
 	@property
 	def fbo(self):
 		return self.__fboSelection
 
+
 	def draw(self, perspective=False):
 		self.__root.draw(perspective)
+
 
 	def recalculateBSP(self, p1, p2):
 		self.__root.recalculateBSP(p1, p2)
 
+
 	def checkCollison(self, p1, p2):
 		return self.__root.checkCollison(p1, p2)
 
-	def drawPicking(self):
 
-		# global fboSelection, texSelection, depthSelection
+	def drawPicking(self):
 
 		names = []
 
@@ -436,7 +409,6 @@ class Tree(object):
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-		# self.__root.draw(perspective, selectMode=True, names=names)
 		self.__root.draw(True, selectMode=True, names=names)
 
 		glBindRenderbuffer(GL_RENDERBUFFER, 0)

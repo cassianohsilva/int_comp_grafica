@@ -5,7 +5,6 @@ from vector import Vector
 
 class PerspectiveCamera(object):
 
-	# def __init__(self, position, direction, up, width, height):
 	def __init__(self, position, direction, up, dimension):
 		super(PerspectiveCamera, self).__init__()
 		self.__position = Vector(*position)
@@ -19,6 +18,7 @@ class PerspectiveCamera(object):
 		self.__initialDirection = direction
 		self.__initialUp = up
 
+
 	def apply(self):
 		glMatrixMode(GL_PROJECTION)
 		glLoadIdentity()
@@ -29,22 +29,27 @@ class PerspectiveCamera(object):
 
 		glMatrixMode(GL_MODELVIEW)
 
+
 	def reset(self):
 		self.__position = Vector(*self.__initialPosition)
 		self.__direction = Vector(*self.__initialDirection)
 		self.__up = Vector(*self.__initialUp)
 
+
 	@property
 	def position(self):
 		return self.__position
+
 
 	@property
 	def center(self):
 		return (self.__position + self.__direction)
 
+
 	@property
 	def up(self):
 		return self.__up
+
 
 	def rotate(self, dx, dy):
 

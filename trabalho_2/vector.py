@@ -2,10 +2,11 @@ from numbers import Number
 from math import sqrt, sin, cos
 
 class Vector(object):
-	"""docstring for Vector"""
+
 	def __init__(self, x=0, y=0, z=0):
 		super(Vector, self).__init__()
 		self.x, self.y, self.z = x, y, z
+
 
 	def __mul__(self, val):
 
@@ -16,8 +17,10 @@ class Vector(object):
 		else:
 			raise TypeError('Invalid operator types')
 
+
 	def __neg__(self):
 		return Vector(-self.x, -self.y, -self.z)
+
 
 	def __imul__(self, val):
 
@@ -38,6 +41,7 @@ class Vector(object):
 		else:
 			raise TypeError('Invalid operator types')
 
+
 	def __rmul__(self, val):
 
 		if isinstance(val, Vector):
@@ -47,12 +51,14 @@ class Vector(object):
 		else:
 			raise TypeError('Invalid operator types')
 
+
 	def __add__(self, val):
 
 		if isinstance(val, Vector):
 			return Vector(self.x + val.x, self.y + val.y, self.z + val.z)
 		else:
 			raise TypeError('Invalid operator types')
+
 
 	def __iadd__(self, val):
 
@@ -66,12 +72,14 @@ class Vector(object):
 		else:
 			raise TypeError('Invalid operator types')
 
+
 	def __sub__(self, val):
 
 		if isinstance(val, Vector):
 			return Vector(self.x - val.x, self.y - val.y, self.z - val.z)
 		else:
 			raise TypeError('Invalid operator types')
+
 
 	def __isub__(self, val):
 
@@ -85,8 +93,10 @@ class Vector(object):
 		else:
 			raise TypeError('Invalid operator types')
 
+
 	def __len__(self):
 		return 3
+
 
 	def cross(self, val):
 
@@ -98,9 +108,11 @@ class Vector(object):
 		else:
 			raise TypeError('Invalid operator types')
 
+
 	@property
 	def magnitude(self):
 		return sqrt(pow(self.x, 2) + pow(self.y, 2) + pow(self.z, 2))
+
 
 	@property
 	def normalized(self):
@@ -109,8 +121,10 @@ class Vector(object):
 
 		return Vector(self.x / m, self.y / m, self.z / m)
 
+
 	def __repr__(self):
 		return str((self.x, self.y, self.z))
+
 
 	def __getitem__(self, key):
 

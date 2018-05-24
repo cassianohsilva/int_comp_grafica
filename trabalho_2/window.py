@@ -1,10 +1,11 @@
 from OpenGL.GLUT import *
 
+from utils import signal
 from tree import *
 from camera import PerspectiveCamera
 
 class Window(object):
-	"""docstring for Window"""
+
 	def __init__(self, width, height):
 		super(Window, self).__init__()
 
@@ -31,13 +32,16 @@ class Window(object):
 
 		self.__collisionEdge = None
 
+
 	def convertWindowToOpenGL(self, point):
 
 		return (float(point[0]) / self.__dimension[0], 1.0 - (float(point[1]) / self.__dimension[1]))
 
+
 	def convertOpenGLToWindow(self, point):
 
 		return (point[0] * self.__dimension[0], (1 - point[1]) * self.__dimension[1])
+
 
 	def applyCurrentMatrix(self):
 
@@ -48,6 +52,7 @@ class Window(object):
 			glViewport(0, 0, self.__dimension[0] + 1, self.__dimension[1] + 1)
 			glOrtho(0.0, 1.0, 0.0, 1.0, -0.5, 0.5)
 
+
 	def __GLInit(self):
 
 		glutInitWindowSize(self.__dimension[0] + 1, self.__dimension[1] + 1)
@@ -55,7 +60,6 @@ class Window(object):
 
 		glMatrixMode(GL_PROJECTION)
 
-		# Save ortho matrix
 		glLoadIdentity()
 		glOrtho(0.0, 1.0, 0.0, 1.0, -0.5, 0.5)
 
@@ -73,12 +77,28 @@ class Window(object):
 
 		glLineWidth(2)
 
+
+	def extrude(self, x, y, direction):
+
+		if self.__perspective:
+
+			self.__selectedObject = self.pickElements((x, y))
+
+			if self.__selectedObject:
+				self.__selectedObject.extrude(0.025 * signal(direction))
+
+
 	def specialKeyPressed(self, key, x, y):
-		pass
+		if key == GLUT_KEY_UP:
+			self.extrude(x, y, 1)
+		elif key == GLUT_KEY_DOWN:
+			self.extrude(x, y, -1)
+
 
 	def resize(self, w, h):
 		self.__dimension[0] = w - 1
 		self.__dimension[1] = h - 1
+
 
 	def keyPressed(self, key, x, y):
 
@@ -96,6 +116,7 @@ class Window(object):
 			glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION)
 			glutLeaveMainLoop()
 
+
 	def pickElements(self, point):
 
 		names = self.__tree.drawPicking()
@@ -112,6 +133,7 @@ class Window(object):
 		index = (pixels[0] * 65025) + (pixels[1] * 255) + (pixels[2] - 1)
 
 		return names[index] if (index >= 0 and index < len(names)) else None
+
 
 	def draw(self):
 
@@ -141,6 +163,7 @@ class Window(object):
 
 		glutSwapBuffers()
 
+
 	def mouseDragged(self, x, y):
 
 		if self.__startPoint != None:
@@ -154,6 +177,7 @@ class Window(object):
 							(clamp(y, self.__dimension[1]) - self.__endPoint[1]) * factor / self.__dimension[1])
 
 			self.__endPoint[0], self.__endPoint[1] = clamp(x, self.__dimension[0]), clamp(y, self.__dimension[1])
+
 
 	def mouseButton(self, button, state, x, y):
 
@@ -179,12 +203,4 @@ class Window(object):
 		# Mouse wheel
 		elif (button == 3) or (button == 4):
 
-			if self.__perspective:
-
-				self.__selectedObject = self.pickElements((x, y))
-
-				if self.__selectedObject:
-					if button == 3:
-						self.__selectedObject.extrude(0.025)
-					else:
-						self.__selectedObject.extrude(-0.025)
+			self.extrude(x, y, -button + 3.5)
