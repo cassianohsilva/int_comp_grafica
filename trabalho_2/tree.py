@@ -38,6 +38,17 @@ class Node(object):
 		self.__left = None
 		self.__right = None
 
+	@property
+	def depth(self):
+
+		return self.__editableVertices[0][2]
+
+	@depth.setter
+	def depth(self, d):
+
+		for ev in self.__editableVertices:
+			ev[2] = d
+
 	def __computeNormals(self):
 
 		temp = [ Vector(*v) for v in self.__vertices ]
@@ -86,8 +97,11 @@ class Node(object):
 
 					if signal1 < 0:
 						self.__color = self.__right.__color
+						self.depth = self.__right.depth
+
 					else:
 						self.__color = self.__left.__color
+						self.depth = self.__left.depth
 
 					self.__equation = None
 					self.__left = None
