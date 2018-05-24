@@ -3,7 +3,16 @@
 import sys
 from window import *
 
-# import traceback
+def printUsage():
+	print('Usage:\n')
+	print('\tO\t\t\tSwitch between 2D and 3D view')
+	print('\tESC\t\t\tFinish program\n')
+
+	print('On 3D view:\n')
+	print('\tR\t\t\tReset camera position')
+	print('\tMouse wheel or')
+	print('\tUp/Down key\t\tExtrude polygon (mouse need to be over the polygon)')
+	print('\tClick and move to rotate the camera')
 
 def main(argv):
 
@@ -19,6 +28,8 @@ def main(argv):
 	glutMotionFunc(window.mouseDragged)
 	glutKeyboardFunc(window.keyPressed)
 	glutSpecialFunc(window.specialKeyPressed)
+
+	printUsage()
 
 	glutMainLoop()
 
