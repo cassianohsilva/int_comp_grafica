@@ -154,10 +154,17 @@ class Window(object):
 
 				glColor(0, 0, 0)
 
-				glBegin(GL_LINE_STRIP)
+				glBegin(GL_LINES)
 
 				glVertex(*self.convertWindowToOpenGL(self.__startPoint))
 				glVertex(*self.convertWindowToOpenGL(self.__endPoint))
+
+				if self.__collisionEdge != None:
+
+					glColor(1.0, 1.0, 1.0)
+
+					glVertex(*self.__collisionEdge[0])
+					glVertex(*self.__collisionEdge[1])
 
 				glEnd()
 
@@ -175,6 +182,12 @@ class Window(object):
 				self.__camera.rotate(
 							(self.__endPoint[0] - clamp(x, self.__dimension[0])) * factor / self.__dimension[0],
 							(clamp(y, self.__dimension[1]) - self.__endPoint[1]) * factor / self.__dimension[1])
+
+			elif self.__collisionEdge == None:
+
+				self.__collisionEdge = self.__tree.checkCollison(
+										self.convertWindowToOpenGL(self.__startPoint),
+										self.convertWindowToOpenGL(self.__endPoint))
 
 			self.__endPoint[0], self.__endPoint[1] = clamp(x, self.__dimension[0]), clamp(y, self.__dimension[1])
 
